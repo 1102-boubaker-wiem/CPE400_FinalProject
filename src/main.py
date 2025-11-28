@@ -1,18 +1,23 @@
 from graph_generator import generate_graph
 from path_finder import find_path
 from flow_simulator import FlowSimulator
+from packet import Packet
+from network import Network
 
 def main():
+    packet = Packet("ogm", "AA:AA:AA:AA:AA:AA", "FF:FF:FF:FF:FF:FF", {"yay":"woo"})
+    
     # 1. Generate random network
     nodes = generate_graph()
+    network = Network(nodes)
+    network.send_packet(packet)
 
     # 2. Choose sender & receiver
-    src = "AA:AA:AA:AA"
-    dst = "AA:AA:AA:B3"
+    src = nodes[0].identifier
+    dst = nodes[1].identifier
 
     # 3. Find path
     path = find_path(nodes, src, dst)
-    print("Path:", path)
 
     # If no path → skip
     if not path:
