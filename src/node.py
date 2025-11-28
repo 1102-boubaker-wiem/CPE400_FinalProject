@@ -12,5 +12,7 @@ class Node:
         if (self.identifier == packet.dest or packet.dest == "FF:FF:FF:FF:FF:FF"):
             self.accept_packet(packet)
         
+        # TODO routing algorithm should be used here to decide how packets are forwarded
+        
     def accept_packet(self, packet):
         print(f"Node {self.identifier} accepting from {packet.src}!")

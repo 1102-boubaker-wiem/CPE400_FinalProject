@@ -5,7 +5,7 @@ from packet import Packet
 from network import Network
 
 def main():
-    packet = Packet("ogm", "AA:AA:AA:AA:AA:AA", "FF:FF:FF:FF:FF:FF", {"yay":"woo"})
+    packet = Packet("ogm", "AA:AA:AA:AA:AA:AA", "AA:AA:AA:AA:AA:B1", {"yay":"woo"})
     
     # 1. Generate random network
     nodes = generate_graph()
