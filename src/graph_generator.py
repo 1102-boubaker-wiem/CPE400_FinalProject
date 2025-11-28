@@ -1,4 +1,4 @@
-from Node import Node
+from node import Node
 import random
 
 LINK_PROBABILITY = 0.5
@@ -8,16 +8,16 @@ MAX_LINK_WEIGHT = 1000
 def generate_graph():
     # list of MAC-like node identifiers
     macs = [
-        "AA:AA:AA:AA",
-        "AA:AA:AA:AB",
-        "AA:AA:AA:AC",
-        "AA:AA:AA:AD",
-        "AA:AA:AA:AE",
-        "AA:AA:AA:AF",
-        "AA:AA:AA:B0",
-        "AA:AA:AA:B1",
-        "AA:AA:AA:B2",
-        "AA:AA:AA:B3"
+        "AA:AA:AA:AA:AA:AA",
+        "AA:AA:AA:AA:AA:AB",
+        "AA:AA:AA:AA:AA:AC",
+        "AA:AA:AA:AA:AA:AD",
+        "AA:AA:AA:AA:AA:AE",
+        "AA:AA:AA:AA:AA:AF",
+        "AA:AA:AA:AA:AA:B0",
+        "AA:AA:AA:AA:AA:B1",
+        "AA:AA:AA:AA:AA:B2",
+        "AA:AA:AA:AA:AA:B3"
     ]
     
     nodes = [Node(mac) for mac in macs]
