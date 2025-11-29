@@ -1,9 +1,9 @@
 from node import Node
 import random
 
-LINK_PROBABILITY = 0.5
+LINK_PROBABILITY = 0.25
 MIN_LINK_WEIGHT = 1
-MAX_LINK_WEIGHT = 1000
+MAX_LINK_WEIGHT = 500
 
 def generate_graph(network, num_nodes):
     macs = [":".join(f'{i:012X}'[j:j+2] for j in range(0, 12, 2)) for i in range(num_nodes)]
