@@ -1,10 +1,12 @@
-class Network:
-    def __init__(self, nodes):
-        self.nodes = nodes
+from packet import Packet
 
-    def send_packet(self, packet):
-        for link in self.get_node(packet.src).links:
-            self.get_node(link).receive_packet(packet)
+class Network:
+    def __init__(self):
+        self.nodes = []
+        
+    def broadcast_ogm(self):
+        for node in self.nodes:
+            node.broadcast_ogm()
     
     def get_node(self, identifier):
         return [node for node in self.nodes if node.identifier == identifier][0]
