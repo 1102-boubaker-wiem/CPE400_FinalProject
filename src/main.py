@@ -3,35 +3,30 @@ from path_finder import find_path
 from flow_simulator import FlowSimulator
 from packet import Packet
 from network import Network
+import random
 
 def main():
-    packet = Packet("ogm", "AA:AA:AA:AA:AA:AA", "AA:AA:AA:AA:AA:B1", {"yay":"woo"})
-    
     # 1. Generate random network
-    nodes = generate_graph()
-    network = Network(nodes)
-    network.send_packet(packet)
-
-    # 2. Choose sender & receiver
-    src = nodes[0].identifier
-    dst = nodes[1].identifier
-
-    # 3. Find path
-    path = find_path(nodes, src, dst)
-
-    # If no path → skip
-    if not path:
-        print("No path found!")
-        return
-
-    # 4. Run flow simulation
-    sim = FlowSimulator(nodes)
-    results = sim.simulate_flow(path, n_packets=2000)
-
-    # 5. Show results
-    print("\n=== Experiment 1 Results ===")
-    for k, v in results.items():
-        print(f"{k}: {v}")
+    network = Network()
+    nodes = generate_graph(network, 100)
+    
+    for i in range(0, 10):
+        network.broadcast_ogm()
+    
+    src_node = random.choice([n for n in nodes])
+    dest_node = random.choice([n for n in nodes if n is not src_node])
+    packet = Packet(
+        "data",
+        src_node.identifier,
+        dest_node.identifier,
+        {
+            "something important" : "goes here"
+        }
+    )
+    
+    nodes[0].send_packet(packet)
+    
+    print(packet)
 
 if __name__ == "__main__":
     main()
