@@ -8,7 +8,7 @@ class Node:
         self.sequence_number = 0
         self.routing_table = {}
         self.ogm_sequence_nums = {}
-        self.ogm_counts = {} # stores the number of OGMs for each originator and neighbor combo [neighbor][originator]
+        self.ogm_counts = {} # stores the number of OGMs for each originator and neighbor combo [originator][neighbor]
         
         # add node to the network
         network.nodes.append(self)
@@ -23,86 +23,89 @@ class Node:
         
         if packet.type == "ogm":
             self.process_ogm(packet)
-            return
+            return self.links[packet.src] # return weight of link between this node and sender
         
         if packet.dest == self.identifier or packet.dest == "FF:FF:FF:FF:FF:FF":
             self.accept_packet(packet)
+            return 0
         else:
-            self.send_packet(packet)
+            return self.send_packet(packet)
         
     def accept_packet(self, packet):
-        print("packet meant for me")
         return
         
     def process_ogm(self, packet):
+        sender = packet.src # the neighbor that is forwarding the OGM
         originator = packet.data['originator']
         sequence = packet.data['sequence']
+        
+        # get link weight (representing time for packet to cross that link) and subtract from ttl
+        weight = self.links[sender]
         ttl = packet.data['ttl']
-        packet.data['ttl'] -= 1
-        sender = packet.src # the neighbor that is forwarding the OGM
+        ttl -= weight
         
-        # check if we are receiving our own OGMs for some reason
-        if originator == self.identifier:
-            return
-        
-        # check if old ogm (sequence number <= last sequence number)
-        if originator in self.ogm_sequence_nums and sequence <= self.ogm_sequence_nums[originator]:
-            return
-        else:
-            self.ogm_sequence_nums[originator] = sequence
-        
+        # check if ttl has expired
         if ttl <= 0:
             return
         
-        if sender not in self.ogm_counts:
-            self.ogm_counts[sender] = {}
+        # check if we are receiving our own OGMs
+        if originator == self.identifier or sender == self.identifier:
+            return
+        
+        # initialize tracking structures
+        if originator not in self.ogm_counts:
+            self.ogm_counts[originator] = {}
+        if originator not in self.ogm_sequence_nums:
+            self.ogm_sequence_nums[originator] = {}
+        
+        if sender not in self.ogm_counts[originator]:
+            self.ogm_counts[originator][sender] = 0
+        if sender not in self.ogm_sequence_nums[originator]:
+            self.ogm_sequence_nums[originator][sender] = -1
+        
+        # check if we've seen this sequence from this neighbor
+        if sequence <= self.ogm_sequence_nums[originator][sender]:
+            return
+        self.ogm_sequence_nums[originator][sender] = sequence
             
-        if originator not in self.ogm_counts[sender]:
-            self.ogm_counts[sender][originator] = 0
-            
-        self.ogm_counts[sender][originator] += 1
+        # increment ogm_counts
+        self.ogm_counts[originator][sender] += 1
         
         self.update_routing_table()
         
         # forward ogm to all neighbors w/ updated src
-        packet.src = self.identifier
-        self.send_packet(packet)
+        rebroadcast_packet = Packet(
+            type="ogm",
+            src=self.identifier,
+            dest="FF:FF:FF:FF:FF:FF",
+            data={
+                "originator": originator,
+                "sequence": sequence,
+                "ttl": ttl
+            }
+        )
+        self.send_packet(rebroadcast_packet)
         
     # update routing table based on current state of ogm_counts
     def update_routing_table(self):
-        for (neighbor, originators) in self.ogm_counts.items():
-            best_originator = min(originators.items(), key=lambda item: item[1])[0]
-            self.routing_table[best_originator] = neighbor
+        for (originator, neighbors) in self.ogm_counts.items():
+            best_neighbor = max(neighbors.items(), key=lambda item: item[1])[0]
+            self.routing_table[originator] = best_neighbor
         
     def send_packet(self, packet):
         # check if broadcasting
         if packet.dest == "FF:FF:FF:FF:FF:FF":
             for node_ident in self.links:
                 self.network.get_node(node_ident).receive_packet(packet)
-                return
+            return 0
         
         # check if there is a way to dest
         if packet.dest not in self.routing_table:
-            print(f"\x1b[1;31mNo route to {packet.dest} through {self.identifier}!\x1b[0m")
-            return
+            return -1
         
         # find which neighbor is best for dest
         first_hop_ident = self.routing_table[packet.dest]
         
         # forward packet through that node
-        self.network.get_node(first_hop_ident).receive_packet(packet)
-        
-    def broadcast_ogm(self):
-        self.sequence_number += 1
-        ogm_packet = Packet(
-            type = "ogm",
-            src = self.identifier,
-            dest = "FF:FF:FF:FF:FF:FF",
-            data = {
-                "originator": self.identifier,
-                "sequence": self.sequence_number,
-                "ttl": 64
-            }
-        )
-        
-        self.send_packet(ogm_packet)
+        # return weight of link to first_hop and the recursive call
+        return self.links[first_hop_ident] + self.network.get_node(first_hop_ident).receive_packet(packet)
