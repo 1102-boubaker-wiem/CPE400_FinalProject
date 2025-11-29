@@ -10,8 +10,7 @@ def main():
     network = Network()
     nodes = generate_graph(network, 25)
     
-    for i in range(0, 10):
-        network.broadcast_ogm()
+    network.broadcast_ogm()
     
     num_packets = 100
     travel_time_sum = 0
