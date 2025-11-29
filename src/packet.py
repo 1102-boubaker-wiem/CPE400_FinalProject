@@ -4,9 +4,7 @@ class Packet:
         self.src = src
         self.dest = dest
         self.data = data
+        self.path = [src]
         
     def __str__(self):
-        data_str = ""
-        for key, value in self.data.items():
-            data_str += f"    {key}:{value}\n"
-        return f"Packet (type: {self.type}, src: {self.src}, dest: {self.dest})\n{data_str}"
+        return f"Packet(type={self.type!r}, src={self.src}, dest={self.dest}, data={self.data!r}, path={self.path})"
