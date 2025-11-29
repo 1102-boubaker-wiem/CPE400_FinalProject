@@ -5,22 +5,10 @@ LINK_PROBABILITY = 0.5
 MIN_LINK_WEIGHT = 1
 MAX_LINK_WEIGHT = 1000
 
-def generate_graph():
-    # list of MAC-like node identifiers
-    macs = [
-        "AA:AA:AA:AA:AA:AA",
-        "AA:AA:AA:AA:AA:AB",
-        "AA:AA:AA:AA:AA:AC",
-        "AA:AA:AA:AA:AA:AD",
-        "AA:AA:AA:AA:AA:AE",
-        "AA:AA:AA:AA:AA:AF",
-        "AA:AA:AA:AA:AA:B0",
-        "AA:AA:AA:AA:AA:B1",
-        "AA:AA:AA:AA:AA:B2",
-        "AA:AA:AA:AA:AA:B3"
-    ]
+def generate_graph(network, num_nodes):
+    macs = [":".join(f'{i:012X}'[j:j+2] for j in range(0, 12, 2)) for i in range(num_nodes)]
     
-    nodes = [Node(mac) for mac in macs]
+    nodes = [Node(mac, network) for mac in macs]
     n = len(nodes)
 
     # generate adjacency matrix
