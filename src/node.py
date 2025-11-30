@@ -40,11 +40,12 @@ class Node:
         sequence = packet.data['sequence']
         
         # get link weight (representing time for packet to cross that link) and subtract from ttl
-        weight = self.links[sender]
+        # weight = self.links[sender]
         ttl = packet.data['ttl']
-        ttl -= weight
+        # ttl -= weight
         
-        # check if ttl has expired
+        # drop expired OGM
+        ttl -= 1
         if ttl <= 0:
             return
         
@@ -72,6 +73,10 @@ class Node:
         self.ogm_counts[originator][sender] += 1
         
         self.update_routing_table()
+        # Re-broadcast OGM to neighbors except the one we received it from
+        for neighbor in self.links:
+            if neighbor == sender:
+                continue
         
         # forward ogm to all neighbors w/ updated src
         rebroadcast_packet = Packet(
@@ -84,15 +89,22 @@ class Node:
                 "ttl": ttl
             }
         )
-        self.send_packet(rebroadcast_packet)
+        # self.send_packet(rebroadcast_packet)
+        self.network.get_node(neighbor).receive_packet(rebroadcast_packet)
+
         
     # update routing table based on current state of ogm_counts
     def update_routing_table(self):
         for (originator, neighbors) in self.ogm_counts.items():
             best_neighbor = max(neighbors.items(), key=lambda item: item[1])[0]
             self.routing_table[originator] = best_neighbor
+            # avoid misrouting loops
+        self.routing_table[self.identifier] = self.identifier
         
     def send_packet(self, packet):
+        # prevent infinite routing loops
+        if len(packet.path) > len(self.network.nodes):
+            return -1
         # check if broadcasting
         if packet.dest == "FF:FF:FF:FF:FF:FF":
             for node_ident in self.links:
@@ -104,8 +116,21 @@ class Node:
             return -1
         
         # find which neighbor is best for dest
-        first_hop_ident = self.routing_table[packet.dest]
+        # first_hop_ident = self.routing_table[packet.dest]
+        # Determine next hop  
+        next_hop = self.routing_table[packet.dest]
+         # Next-hop must still be a neighbor in the *current* topology  
+        if next_hop not in self.links:
+            return -1   # the link disappeared after mutate_graph()
+
+
+        # another check: if link no longer exists due to network mutation
+        # if first_hop_ident not in self.links:
+        #     return -1
         
         # forward packet through that node
         # return weight of link to first_hop and the recursive call
-        return self.links[first_hop_ident] + self.network.get_node(first_hop_ident).receive_packet(packet)
+        # return self.links[first_hop_ident] + self.network.get_node(first_hop_ident).receive_packet(packet)
+
+        # Forward packet
+        return self.links[next_hop] + self.network.get_node(next_hop).receive_packet(packet)

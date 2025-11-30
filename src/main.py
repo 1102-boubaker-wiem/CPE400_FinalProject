@@ -17,6 +17,8 @@ def main():
     travel_time_sum = 0
     packets_lost = 0
     for i in range(0, num_packets):
+        mutate_graph(nodes) 
+        network.broadcast_ogm()
         src_node = random.choice([n for n in nodes])
         dest_node = random.choice([n for n in nodes if n is not src_node])
         packet = Packet(
