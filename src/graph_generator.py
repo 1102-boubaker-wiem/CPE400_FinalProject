@@ -28,3 +28,26 @@ def generate_graph(network, num_nodes):
                 nodes[i].links[nodes[j].identifier] = matrix[i][j]
 
     return nodes
+
+def mutate_graph(nodes, link_prob=LINK_PROBABILITY, min_w=MIN_LINK_WEIGHT, max_w=MAX_LINK_WEIGHT):
+    n = len(nodes)
+
+    # Create new adjacency matrix
+    matrix = [[0] * n for _ in range(n)]
+
+    for i in range(n):
+        for j in range(i+1, n):
+            if random.random() < link_prob:
+                w = random.randint(min_w, max_w)
+            else:
+                w = 0
+
+            matrix[i][j] = w
+            matrix[j][i] = w
+
+    # Update adjacency lists for each node
+    for i in range(n):
+        nodes[i].links = {}  # clear old links
+        for j in range(n):
+            if matrix[i][j] > 0:
+                nodes[i].links[nodes[j].identifier] = matrix[i][j]

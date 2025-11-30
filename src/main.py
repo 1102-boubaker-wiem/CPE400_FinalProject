@@ -1,9 +1,10 @@
-from graph_generator import generate_graph
+from graph_generator import generate_graph, mutate_graph
 from path_finder import find_path
 from flow_simulator import FlowSimulator
 from packet import Packet
 from network import Network
 import random
+
 
 def main():
     # 1. Generate random network
