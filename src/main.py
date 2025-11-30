@@ -19,6 +19,15 @@ def main():
     for i in range(0, num_packets):
         mutate_graph(nodes) 
         network.broadcast_ogm()
+        # reset routing state
+        for node in nodes:
+            node.routing_table = {}
+            node.ogm_counts = {}
+            node.ogm_sequence_nums = {}
+        # rebuild routing tables
+        for _ in range(4):   # 4 floods makes routing converge
+            network.broadcast_ogm()
+
         src_node = random.choice([n for n in nodes])
         dest_node = random.choice([n for n in nodes if n is not src_node])
         packet = Packet(
