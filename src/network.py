@@ -14,7 +14,8 @@ class Network:
                     "originator": node.identifier,
                     "sequence": node.sequence_number,
                     "ttl": 500
-                }
+                },
+                size = 128
             )
             node.sequence_number += 1
             node.send_packet(ogm_packet)

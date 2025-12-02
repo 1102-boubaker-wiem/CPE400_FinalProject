@@ -13,6 +13,8 @@ def main():
     for link_prob in [x / 100.0 for x in range(5, 100, 5)]:
         travel_time_sum = 0
         packets_lost = 0
+        total_bytes = 0
+        total_time = 0
         
         nodes = generate_graph(network, 25, link_prob)
         network.nodes = nodes
@@ -33,7 +35,8 @@ def main():
                 "data",
                 src_node.identifier,
                 dest_node.identifier,
-                {}
+                {},
+                size = 1024
             )
             
             travel_time = src_node.send_packet(packet)
@@ -43,21 +46,28 @@ def main():
             else:
                 # print(f"\033[1;32mPacket Travel Time:\033[22m {travel_time}\033[0m")
                 travel_time_sum += travel_time
+
+                total_bytes+= packet.size
+                total_time += travel_time
             
         mutate_graph(nodes, link_prob)       
         print()
         print(f"\033[1mPackets Lost w/ {link_prob} link prob: {packets_lost} ({(packets_lost/num_packets)*100}%)\033[0m")
         
         average_travel_time = -1
+        throughput = 0
         if (packets_lost != num_packets):
             average_travel_time = travel_time_sum / (num_packets - packets_lost)
+            # convert time to milliseconds
+            total_time_seconds = total_time / 1000 
+            throughput = (total_bytes * 8) / total_time
             print(f"\033[1mAverage Travel Time w/ {link_prob} link prob: {average_travel_time}\033[0m")
-            
-        stats.append({link_prob, packets_lost, average_travel_time})
+            print(f"\033[1mThroughput w/ {link_prob}: {throughput} bps\033[0m")
+        stats.append([link_prob, packets_lost, average_travel_time, throughput])
         
     with open("stats.csv", "w", newline="") as file:
         writer = csv.writer(file)
-        writer.writerow({"link_prob", "packets_lost", "average_travel_time"})
+        writer.writerow(["link_prob", "packets_lost", "average_travel_time", "throughput_bps"])
         writer.writerows(stats)
 
     print("Data written to stats.csv successfully.")

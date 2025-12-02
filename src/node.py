@@ -19,11 +19,14 @@ class Node:
     
     def receive_packet(self, packet):
         # append self identifier to packet's path
-        packet.path.append(self.identifier)
+        # packet.path.append(self.identifier)
         
+        if packet.type != "ogm":
+            packet.path.append(self.identifier)
+
         if packet.type == "ogm":
             self.process_ogm(packet)
-            return self.links[packet.src] # return weight of link between this node and sender
+            return 0 # return weight of link between this node and sender
         
         if packet.dest == self.identifier or packet.dest == "FF:FF:FF:FF:FF:FF":
             self.accept_packet(packet)
@@ -43,34 +46,32 @@ class Node:
         # weight = self.links[sender]
         ttl = packet.data['ttl']
         # ttl -= weight
-        
+        if originator == self.identifier or sender == self.identifier:
+            return
         # drop expired OGM
         ttl -= 1
         if ttl <= 0:
             return
+    
         
-        # check if we are receiving our own OGMs
-        if originator == self.identifier or sender == self.identifier:
+         # Initialize per-originator tracking structures
+        counts_for_originator = self.ogm_counts.setdefault(originator, {})
+        seqs_for_originator = self.ogm_sequence_nums.setdefault(originator, {})
+
+        # Global duplicate suppression:
+        # If we've already seen this sequence (from ANY neighbor), drop it.
+        max_seen = max(seqs_for_originator.values(), default=-1)
+        if sequence <= max_seen:
             return
-        
-        # initialize tracking structures
-        if originator not in self.ogm_counts:
-            self.ogm_counts[originator] = {}
-        if originator not in self.ogm_sequence_nums:
-            self.ogm_sequence_nums[originator] = {}
-        
-        if sender not in self.ogm_counts[originator]:
-            self.ogm_counts[originator][sender] = 0
-        if sender not in self.ogm_sequence_nums[originator]:
-            self.ogm_sequence_nums[originator][sender] = -1
-        
-        # check if we've seen this sequence from this neighbor
-        if sequence <= self.ogm_sequence_nums[originator][sender]:
+
+        # Update per-neighbor last sequence
+        last_seq_from_sender = seqs_for_originator.get(sender, -1)
+        if sequence <= last_seq_from_sender:
             return
-        self.ogm_sequence_nums[originator][sender] = sequence
-            
-        # increment ogm_counts
-        self.ogm_counts[originator][sender] += 1
+        seqs_for_originator[sender] = sequence
+
+        # Increment count of OGMs from this neighbor for this originator
+        counts_for_originator[sender] = counts_for_originator.get(sender, 0) + 1
         
         self.update_routing_table()
         # Re-broadcast OGM to neighbors except the one we received it from
@@ -79,18 +80,19 @@ class Node:
                 continue
         
         # forward ogm to all neighbors w/ updated src
-        rebroadcast_packet = Packet(
-            type="ogm",
-            src=self.identifier,
-            dest="FF:FF:FF:FF:FF:FF",
-            data={
-                "originator": originator,
-                "sequence": sequence,
-                "ttl": ttl
-            }
-        )
+            rebroadcast_packet = Packet(
+                type="ogm",
+                src=self.identifier,
+                dest="FF:FF:FF:FF:FF:FF",
+                data={
+                    "originator": originator,
+                    "sequence": sequence,
+                 "ttl": ttl
+             },
+                size=128
+            )
         # self.send_packet(rebroadcast_packet)
-        self.network.get_node(neighbor).receive_packet(rebroadcast_packet)
+            self.network.get_node(neighbor).receive_packet(rebroadcast_packet)
 
         
     # update routing table based on current state of ogm_counts
