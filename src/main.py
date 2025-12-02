@@ -1,8 +1,11 @@
 from graph_generator import generate_graph, mutate_graph
 from packet import Packet
 from network import Network
+from plot_stat import plot_graphs, load_stats
 import random
 import csv
+MIN_PACKET_SIZE = 200    # bytes
+MAX_PACKET_SIZE = 1500   # bytes
 
 def main():
     # 1. Generate random network
@@ -15,6 +18,7 @@ def main():
         packets_lost = 0
         total_bytes = 0
         total_time = 0
+        size = random.randint(200, 1500)
         
         nodes = generate_graph(network, 25, link_prob)
         network.nodes = nodes
@@ -36,7 +40,7 @@ def main():
                 src_node.identifier,
                 dest_node.identifier,
                 {},
-                size = 1024
+                size = size
             )
             
             travel_time = src_node.send_packet(packet)
@@ -48,9 +52,8 @@ def main():
                 travel_time_sum += travel_time
 
                 total_bytes+= packet.size
-                total_time += travel_time
-            
-        mutate_graph(nodes, link_prob)       
+                total_time += travel_time     
+        mutate_graph(nodes, link_prob)    
         print()
         print(f"\033[1mPackets Lost w/ {link_prob} link prob: {packets_lost} ({(packets_lost/num_packets)*100}%)\033[0m")
         
@@ -71,6 +74,7 @@ def main():
         writer.writerows(stats)
 
     print("Data written to stats.csv successfully.")
+    plot_graphs()
 
 if __name__ == "__main__":
     main()

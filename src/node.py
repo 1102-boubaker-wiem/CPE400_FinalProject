@@ -1,4 +1,5 @@
 from packet import Packet
+BANDWIDTH = 1_000_000
 
 class Node:   
     def __init__(self, identifier, network):
@@ -135,4 +136,11 @@ class Node:
         # return self.links[first_hop_ident] + self.network.get_node(first_hop_ident).receive_packet(packet)
 
         # Forward packet
-        return self.links[next_hop] + self.network.get_node(next_hop).receive_packet(packet)
+         # Packet size influences travel time 
+        link_delay = self.links[next_hop]             
+        transmission_delay = (packet.size * 8) / BANDWIDTH
+        propagation_delay = self.links[next_hop] / 1000    
+
+        hop_delay = transmission_delay+ propagation_delay
+
+        return hop_delay + self.network.get_node(next_hop).receive_packet(packet)
