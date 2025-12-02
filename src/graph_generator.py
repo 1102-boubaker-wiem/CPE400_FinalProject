@@ -1,11 +1,10 @@
 from node import Node
 import random
 
-LINK_PROBABILITY = 0.25
 MIN_LINK_WEIGHT = 1
 MAX_LINK_WEIGHT = 500
 
-def generate_graph(network, num_nodes):
+def generate_graph(network, num_nodes, link_probability):
     macs = [":".join(f'{i:012X}'[j:j+2] for j in range(0, 12, 2)) for i in range(num_nodes)]
     
     nodes = [Node(mac, network) for mac in macs]
@@ -16,7 +15,7 @@ def generate_graph(network, num_nodes):
 
     for i in range(n):
         for j in range(i+1, n):
-            if random.random() < LINK_PROBABILITY:
+            if random.random() < link_probability:
                 w = random.randint(MIN_LINK_WEIGHT, MAX_LINK_WEIGHT)
                 matrix[i][j] = w
                 matrix[j][i] = w
@@ -29,7 +28,7 @@ def generate_graph(network, num_nodes):
 
     return nodes
 
-def mutate_graph(nodes, link_prob=LINK_PROBABILITY, min_w=MIN_LINK_WEIGHT, max_w=MAX_LINK_WEIGHT):
+def mutate_graph(nodes, link_prob, min_w=MIN_LINK_WEIGHT, max_w=MAX_LINK_WEIGHT):
     n = len(nodes)
 
     # Create new adjacency matrix
