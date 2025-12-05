@@ -54,7 +54,6 @@ class Node:
         if ttl <= 0:
             return
     
-        
          # Initialize per-originator tracking structures
         counts_for_originator = self.ogm_counts.setdefault(originator, {})
         seqs_for_originator = self.ogm_sequence_nums.setdefault(originator, {})
