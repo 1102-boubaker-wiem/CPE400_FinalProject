@@ -26,7 +26,7 @@ def generate_graph(network, num_nodes, link_probability):
             if matrix[i][j] > 0:
                 nodes[i].links[nodes[j].identifier] = matrix[i][j]
 
-    return nodes
+    network.nodes = nodes
 
 def mutate_graph(nodes, link_prob, min_w=MIN_LINK_WEIGHT, max_w=MAX_LINK_WEIGHT):
     n = len(nodes)

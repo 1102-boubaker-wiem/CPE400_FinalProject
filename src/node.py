@@ -46,9 +46,9 @@ class Node:
         # get link weight (representing time for packet to cross that link) and subtract from ttl
         weight = self.links[sender]
         ttl = packet.data['ttl']
-        # ttl -= weight
         if originator == self.identifier or sender == self.identifier:
             return
+        
         # drop expired OGM
         ttl -= weight
         if ttl <= 0:
@@ -75,12 +75,13 @@ class Node:
         counts_for_originator[sender] = counts_for_originator.get(sender, 0) + 1
         
         self.update_routing_table()
+        
         # Re-broadcast OGM to neighbors except the one we received it from
         for neighbor in self.links:
             if neighbor == sender:
                 continue
         
-        # forward ogm to all neighbors w/ updated src
+            # forward ogm to all neighbors w/ updated src
             rebroadcast_packet = Packet(
                 type="ogm",
                 src=self.identifier,
@@ -92,7 +93,6 @@ class Node:
              },
                 size=128
             )
-        # self.send_packet(rebroadcast_packet)
             self.network.get_node(neighbor).receive_packet(rebroadcast_packet)
 
         
