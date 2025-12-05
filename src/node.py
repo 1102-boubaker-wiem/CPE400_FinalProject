@@ -27,7 +27,7 @@ class Node:
 
         if packet.type == "ogm":
             self.process_ogm(packet)
-            return 0 # return weight of link between this node and sender
+            return 0
         
         if packet.dest == self.identifier or packet.dest == "FF:FF:FF:FF:FF:FF":
             self.accept_packet(packet)
@@ -44,13 +44,13 @@ class Node:
         sequence = packet.data['sequence']
         
         # get link weight (representing time for packet to cross that link) and subtract from ttl
-        # weight = self.links[sender]
+        weight = self.links[sender]
         ttl = packet.data['ttl']
         # ttl -= weight
         if originator == self.identifier or sender == self.identifier:
             return
         # drop expired OGM
-        ttl -= 1
+        ttl -= weight
         if ttl <= 0:
             return
     
@@ -136,11 +136,11 @@ class Node:
         # return self.links[first_hop_ident] + self.network.get_node(first_hop_ident).receive_packet(packet)
 
         # Forward packet
-         # Packet size influences travel time 
-        link_delay = self.links[next_hop]             
+        # Packet size influences travel time 
         transmission_delay = (packet.size * 8) / BANDWIDTH
         propagation_delay = self.links[next_hop] / 1000    
 
         hop_delay = transmission_delay+ propagation_delay
 
+        # forward packet and return total delay
         return hop_delay + self.network.get_node(next_hop).receive_packet(packet)
