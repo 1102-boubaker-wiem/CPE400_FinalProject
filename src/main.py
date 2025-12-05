@@ -12,25 +12,19 @@ def main():
     network = Network()
     
     stats = []
-    num_packets = 100
-    for link_prob in [x / 100.0 for x in range(5, 100, 5)]:
+    num_packets = 5000
+    num_nodes = 100
+    for link_prob in [x / 100.0 for x in range(5, 100, 1)]:
         travel_time_sum = 0
         packets_lost = 0
         total_bytes = 0
         total_time = 0
-        size = random.randint(200, 1500)
+        packet_size = random.randint(200, 1500)
         
-        nodes = generate_graph(network, 25, link_prob)
+        nodes = generate_graph(network, num_nodes, link_prob)
         network.nodes = nodes
         
-        # # reset routing state
-        # for node in nodes:
-        #     node.routing_table = {}
-        #     node.ogm_counts = {}
-        #     node.ogm_sequence_nums = {}
-        # rebuild routing tables
-        for _ in range(4):   # 4 floods makes routing converge
-            network.broadcast_ogm()
+        network.broadcast_ogm()
         
         for _ in range(0, num_packets):
             src_node = random.choice([n for n in nodes])
@@ -40,7 +34,7 @@ def main():
                 src_node.identifier,
                 dest_node.identifier,
                 {},
-                size = size
+                size = packet_size
             )
             
             travel_time = src_node.send_packet(packet)
