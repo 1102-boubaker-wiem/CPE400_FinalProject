@@ -4,6 +4,7 @@ class Network:
     def __init__(self):
         self.nodes = []
         
+    # have each node in the network broadcast OGM to all its neighbors
     def broadcast_ogm(self):
         for node in self.nodes:
             ogm_packet = Packet(

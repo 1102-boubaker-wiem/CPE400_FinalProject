@@ -18,10 +18,7 @@ class Node:
         links_str = "\n".join([f"  {node} -> {weight}" for node, weight in self.links.items()])
         return f"Node {self.identifier}:\n{links_str if links_str else '  (no links)'}"
     
-    def receive_packet(self, packet):
-        # append self identifier to packet's path
-        # packet.path.append(self.identifier)
-        
+    def receive_packet(self, packet):        
         if packet.type != "ogm":
             packet.path.append(self.identifier)
 
@@ -116,23 +113,12 @@ class Node:
         # check if there is a way to dest
         if packet.dest not in self.routing_table:
             return -1
-        
-        # find which neighbor is best for dest
-        # first_hop_ident = self.routing_table[packet.dest]
+
         # Determine next hop  
         next_hop = self.routing_table[packet.dest]
          # Next-hop must still be a neighbor in the *current* topology  
         if next_hop not in self.links:
             return -1   # the link disappeared after mutate_graph()
-
-
-        # another check: if link no longer exists due to network mutation
-        # if first_hop_ident not in self.links:
-        #     return -1
-        
-        # forward packet through that node
-        # return weight of link to first_hop and the recursive call
-        # return self.links[first_hop_ident] + self.network.get_node(first_hop_ident).receive_packet(packet)
 
         # Forward packet
         # Packet size influences travel time 
